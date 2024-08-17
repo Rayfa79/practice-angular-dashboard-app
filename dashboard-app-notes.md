@@ -275,7 +275,7 @@ Angular the complete guide 2024 edition: Task-App
        Add @HostBinding and/or @HostListener in the component class
 
        export class Control Component{
-        
+
         @HostBinding('class') className = 'control'
         @HostListner('click') onClick(){
           console.log(clicked)
@@ -314,13 +314,245 @@ Angular the complete guide 2024 edition: Task-App
              }
           4. Click the host element and you should see data in the
              console
-## 117. Class Binding Repitiion
+## 117. Class Binding Repitiion: CONDITIONALLY RENDER CSS CLASSES
+- How do you conditionally render ONE class on an element?
+  a. You you CLASS BINDING and set equal to a condition
+      exp: <div [class.status]="currentStatus === 'online' ">
+      - in the component add a property called currentStatus
+        and set to online or offline initially.
+- 
 ## 118. Theres More Then One Way of Binding CSS Classes Dynamically
+- BINDING MULTIPLY CLASSES DYNAMICALLY
+- How? Add [class] to element and set equal to an OBJECT w/multiple
+       properties with the key being the class and the value being
+       the conditional
+
+- USE CASE: In the server-status component CSS we have multiple css
+           class that currently do NOT exist in its template.
+           In the template add these class based on a condition.
+
+           TIP: the condition will be the value of a property in its
+                component.
+- THE EXAMPLE: in the server-status template add
+               <div [class]= "{
+                     status: true (always add status class),
+                     'status-online': currentStatus === 'online',
+                     'status-offline': currentStatus === 'offline',
+                     'status-unknown': currentStatus === 'unknown'
+                  }">
+        - Make sure to add the currentStatus property to the component
+    
 ## 119. A Closer Look @ Dynamic Inline CSS Styling
+- Dynamically adding Styles to a component/element
+- How do you add a SINGLE style to a component dynamically?
+    a. <div [style.fontSize]=" 'the computed value' " >
+    a. TIP: USE camel case or wrap in single quotes for double words
+    b. TIP: must wrap the VALUE in SINGLE QUOTES!!!!!!
+- How to add MULTIPLE STYLES to a component dynamically?
+    a. <div [style]="{
+             fontSize: '64px',
+             color: 'pink'
+         }">
+
 ## 120. Manipulating State & Using Literal Values
+- MIMIC A SERVER UPDATING ITS STATUS BY USING SetINTERVAL FUNCTION
+- STEPS:
+- 1. add a constructor function. Add setInterval function to its BODY
+- 2. In interval function run code after 5 sec which is 5000ms
+- 3. in setInterval function create variable that returns random
+     number between 0-1
+- 4. Create a conditional that checks if rnd number is less then 0.5
+     if it is set this.currentStatus = 'online'
+
+    currentStatus = 'offline'
+    constructor(){
+      setInterval(()=> {
+        const rnd = Math.random();
+
+        if( rnd < 0.5 ) {
+          this.currentStatus = 'online';
+        }else if (rnd < 0.9 ){
+            this.currentStatus = ' offline';
+        }else {
+          this.currentStatus = 'unknown';
+        }
+      }, 5000)
+    }
+- 5. Set LITERAL TYPES on the currentStatus property this will allow
+     only CERTAIN TYPES:
+     example: 
+     currentStatus: 'offline' | 'online' | 'unknown' = 'offline';
+- 6. The server status CSS should now change every 5sec in the template
 ## 121. Introductin the Component LifeCycle ngOnInit
-## 122. Implementing LifeCycle Interfacesw
+- WHAT THE HELL IS ngOnInit? all components go through a lifecycle
+                   ngOnInit is a lifecyle hook that runs code AFTER
+                   ANGULAR has INITIATED ALL INPUTS Read. So
+                   input values will be AVAILABLE!
+- WHATS THE DIFFERENCE BETWEEN THE CONSTRUCTOR &ngOnInit?
+               - The constructor runs everytime a component is 
+                 instantiated and ngOnit runs after inputs are read
+- WHY SHOULD WE NOT PUT LOGIC IN THE CONSTRUCTOR?
+               - best practice to keep LEAN and only use to initalize
+                 classes! other logic should go in ngOnInit
+## 122. Implementing LifeCycle Interfaces
+- WHY SHOULD WE IMPLEMENT LIFECYCLE INTERFACES?
+           a. It protects AGAINST TYPO'S! angular
+              does NOT show errors when spelling ngonit or
+              other lifecycles! So hard to debug
+           b. Implement ALL THE HOOKS!!!!! to check for 
+              typos
+  
+- HOW DO YOU IMPLEMENT LIFECYCLE INTERFACES?
+           a. export class Server implements ngOnInit {
+                ngOnInit(){
+                  put code here!
+                }
+           }
+           b. Make sure to IMPORT ngOnInit
 ## 123. Component LifeCylce a DeepDive
+- Component LifeCylce Phases:
+  1. Phase 1: Creation
+           Method: constructor(): runs when angular instantiates
+                   component
+  2. Phase 2: Change Detection
+           Method: ngOnInit: Runs once after angular initialized all 
+                   the inputs. RUNS BEFORE COMPONENT TEMPLATE IS
+                   INITALIZED. so you can change template ui based
+                   on a properties updated state
+
+           Method: ngOnChanges: Runs everytime component inputs 
+                   changed
+           Method: ngDoCheck: Runs evertime this components
+                   checked for changes. 
+
+           Method: ngAfterViewInit: Runs once after the components view
+                   is initalized. 
+
+           Method: ngAfterContentInit: Runs once after component 
+                   content is initialized. 
+           Method: ngAftterViewChecked: Runs everytime the components
+                   view has been checked for changes. 
+
+           Method: ngAfterContentChecked: Runs everytime the components
+                   content has been checked for changes. 
+
+- Execution Order: During Initialization
+  1. Constructor
+
+  Change Detection
+  2. ngOnChanges
+  3. ngOnInit
+  4. ngDoCheck
+  Content                          Views
+  1. ngAfterContentInit          1. ngAfterViewInit
+  2. ngAfterContentChecked       2. ngAfterViewChecked
+  Rendering
+  1. AfterRender
+
+- Subsequent Updates
+  1. ngOnChanges
+  2. ngDoCheck
+  3. ngAfterContentChecked     3. ngAferViewChecked
+  Rendering
+  1. AfterRender
+
+- WHY SHOULD YOU ONLY INITIALIZE CLASSES IN THE CONSTRUCTOR?
+     - best practices to keep it clean
+     - it DOES not have ACCESS to INPUTS values!!!!
+- RUN MOST OF THE LOGIC in ngOnInit hook...http calls ect
+     - will run after input values are initalized
+     - use this for component initialization
+- WHEN SHOULD I RUN ngOnChanges?
+     - when you want to update a component template based on 
+       changes to the component state (input value changes)
+     - This hook takes in a property called changes that
+       stores data on the inputs current value, previous value
+- WHEN SHOULD I RUN ngDoCHECK?
+     - this code runs WHENEVER there is a change in a component
+     - This code runs ALOT. Do not put code in this hook it will runa lot
+      
 ## 124. Component Cleanup With ngOnDestroy
+- WHATS ngOnDestroy?
+  a. its hook that runs ONCE before a component is destroyed
+- WHY THE HELL DO YOU NEED IT?
+  a. it prevents memory leaks which slow down apps. Apps can 
+     potentially keep running code in the background if a 
+     component is not detroyed
+- USE CASE: in video 124 we are running an interval to replicate
+            a server with changing status text. We are NOT
+            conditionally rendering the  service-status comp
+            so its not destroy but it could potentially be
+            removed in the future so we most destory it to 
+            prevent MEMORY LEAKS: interval will keep running
+            in background
+- THE STEPS TO USING ngOnDestory
+  1. implenment and import onDestroy in the class
+
+  2. save setInverval function in a variable called intrval
+
+  3. Hover over setInterval to see its return type which
+     is NodeJs.Timeout
+
+  4. In the class add invterval as a private (cant be accesed in template) property and set return type as NodeJs.TimeOut
+  make sure to add a ? which means or UNDEFINDED
+       private interval?: NodeJs.Timeout
+
+  5. Create a onDestroy method in the body call:
+     onDestroy(){
+      clearTimeOut(this.interval)
+     }
+
+  6. TIP: if get an error with NodeJs.Timeout return type
+         instead add:
+       private interval?: ReturnType<typeof setInterval>  
+  )
 ## 125. Component CleanUp With DestroyRef
+- ngOnDestroy works in OLDER Angular Versions
+
+- DestroyRef is a newer modern way to clean up components but it
+  does not work with older versions of angular. Works with Angular
+  16 and newer. 
+
+- HOW DO YOU USE IT IN COMPONENTS?
+  1. INJECT DestroyRef via the constructor OR the inject function
+          a. private destroyRef = inject (DestroyRef);
+  2. IMPORT DestroyRef: import { DestroyRef } from '@angular/core'
+
+  3. Save LOGIC or function in a variable
+         a. ngOnInit(){
+              const interval = setInterval(()=> {
+                 logic goies here
+              })
+         } 
+  4. CALL DestroyRef when component is destroyed and add logic
+     to clear the interval from above
+         a. add this function AFTER setInverval function but still
+            inside of ngOnInit
+
+         b. this.destroyRef.onDestroy(()=> {
+               clearInterval(interval)
+         })
+  5. You can use destroyRef onDestroy more then ONCE in a 
+     component. You can use on serveral methods within a component
+## 126. Handlong Form Submittion (repetition)
+
+## 127.  Working with Template Variables
+
+## 128.  Extracting Input Values Via Template Variables
+
+## 129.  Template Variables and Component Instances
+
+## 130.  Getting Access To Template Elements via  ViewChild
+
+## 131.  Using the ViewChild Signal Function
+
+## 132.  ViewChild vs ContentChild
+
+## 133.  A Closer Look at Decorator based querires & LifeCycle Hooks
+
+## 134.  The afterRender & afterNextRender LyfeCycle Functions
+
+## 135.  Making Sense of Signal Effects
+
+## 136.  Signal Effects CleanUp Functions
           
