@@ -6,7 +6,7 @@ Angular the complete guide 2024 edition: Task-App
 ## Table of Contents
 - [Getting Started](#)
 - [Adding New Components][(#)]
-- [string interpolation](#string)
+- [string interpolation](#strings) 
 - [property binding](#propery)
 - [using getters for computed value](#propery)
 - [changing state of UI (old way- zone.js)](#propery)
@@ -16,7 +16,7 @@ Angular the complete guide 2024 edition: Task-App
 - [Required and optional inputs](#meeting-notes)
 - [Using Signal inputs instead of @Input](#meeting-notes)
 
-## Notes: Section 2: Angular Essentials- Components, Templates, Services & More
+## Notes: Section 2: Angular Essentials- Components, Templates, Services and more 
 - [Getting Started](#)
 - [Adding New Components][(#)]
 - [string interpolation](#string)
@@ -90,7 +90,7 @@ Angular the complete guide 2024 edition: Task-App
   </article>
 </div>
 
-## 105: reating a ReUsable button component & using Content Projection
+## 105: creating a ReUsable button component & using Content Projection
 
 - The new-ticket template and header template have the SAME HTML button element code
 - FIX: we will use this code in multiple components
@@ -116,7 +116,7 @@ Angular the complete guide 2024 edition: Task-App
 - WAY TWO: 
    - add <ng-content> placeholders in reusable button component: button.html: 
             <span>
-              <ng-conent />
+              <ng-content />
             </span>
             <span class=".icon"> <ng-conent /> </span>
 
@@ -537,22 +537,493 @@ Angular the complete guide 2024 edition: Task-App
 ## 126. Handlong Form Submittion (repetition)
 
 ## 127.  Working with Template Variables
+- HOW DO YOU EXTRACT THE VALUES FROM INPUTS When a USER INPUTS THEM?
+-     a. THERE ARE TWO WAYS: 
+         1. [(ngModel)]="add variable"
+         2. Store element in template variable (element references)
+            < input id="name" name="name" #name>
+            - to access input value in the component add to 
+              (ngSubmit)="onSubmit(name.value);
+            - to console.log the OBJECT use console.dir(name);
+            - This needs an event to extract input value (form submit)
+          3. via@ViewChild: add a template variable (elementRef) to the
+              input or element to get its value
+              1. You can use this without an event!!!!
+              2. add the elementRef to the element whose data u want
+              3. To access the elements data (input ect) in the 
+                 component do the following. In the class add: 
+                 1. @ViewChild('form') form: 
+                 2.
+                 3
+-  
 
 ## 128.  Extracting Input Values Via Template Variables
 
 ## 129.  Template Variables and Component Instances
 
 ## 130.  Getting Access To Template Elements via  ViewChild
+- USE CASE: will you template variables (elementRef) to RESET form
+            in new-ticket component once form submitted
+- STEPS:
+   1. Add template variable to form element
+      <form (ngSubmit)="onSubmit(titleInput.value,form)" #form> </form>
+   2. In the components onSubmit method pass in the form and its type
+      onSubmit(title: string, form: HTMLFormElement){
+            console.log(title)
+            form.reset()
+         }
+         ***TIP: to get the #form type just hover over it in the template
+- TO GET FORM INPUT VALUES IN COMPONENT WITHOUT TRIGGERING AN EVENT
+  STEPS:
+        1. add template variable in form element
+        2. YOU DO NOT have to pass form into onSubmit
+             <form (ngSubmit)="onSubmit(titleInput.value)" #form> </form>
+        3. In component access form via @ViewChild() form(variable 
+           name)
+
+        4. @ViewChild can take in a ELEMENT as a string or
+           a component instance such as ButtonComponent
+
+        5. @ViewChild('form') form?: ElementRef<HTMLFormElement>
+
+        6. when using @ViewChild you MUST add ElementRef as a type
+           and add EXTRA infromation about the elements type
+           if you hover over the #form in the template you will see
+           its of type HTMLFormElement
+
+        7. Add a ? after form (form?:) because when the component
+           is rendered its VIEW WILL NOT BE RENDERED first and
+           the form data will come back undefined!!!
+
+        8. not lets use the form variable to reset the form in the
+           onSubmit method
+           onSubmit(title: string) {
+                 console.log(title)
+                 this.form?.nativeElement.reset()
+             }
+            TIP:..add the question mark to the above which will
+                tell typscript to only access the form data and
+                reset the form if its NOT UNDEFINED
+
+            TIP: ....add nativeElement to access the HTMLFormElement
+                 its is wrapped by an ElementRef so we need the 
+                 nativeElement to access it
+
+
+
+## HOW TO SELECT MULTIPLE ELEMENTS WHEN USING @ViewChild?
+  - use ViewChildren!
+  - USE CASE: if you have a ButtonComponent in your template that
+    has multiple buttons in which you wanto get and store info
+      1. @ViewChildren(ButtonComponent) buttons
+        - this will give you an array of elementRef buttons instances!
 
 ## 131.  Using the ViewChild Signal Function
+- Form Angular 17.3 and above only
+- THE SYNTAX:
+   export class NewTicketComponent {
+      private form = viewChild<ElementRef<> HTMLFormElement> >('form);
+
+      //to reset the form
+      onSubmit(title: string){
+          this.form()?.nativeElement.reset()
+       }
+   }
 
 ## 132.  ViewChild vs ContentChild
+- How can you get hold of PROJECTED CONTENT (<ng-content>) from
+  the template in the component?
+
+  example: You want get hold of the input and textArea data in the component
+
+       //control.component TEMPLATE
+         <label>{{ label() }}</label>
+         <ng-content select="input,textarea"/>
+
+- You CANNOT use @ViewChild or viewChild() form PROJECTED CONTENT
+
+- THE SOLUTION:  use @ContentChild, @ContentChildren or contentChild()
+
+   1. //control.component to get access to the input element data
+
+      @ContentChild('input') private control?: ElementRef<HTMLInputElement | HTMLTextAreaElement>
+
+      onClick(){
+        console.log(this.control)
+      }
+
+   2. ADD #input elementRef to the input ELEMENTS. NOT the 
+      <ng-content select="input,textarea"/> in the template
+      BUT where the <app-control> is being used!!!
+
+      //new-ticket.compoent TEMPLATE
+      <app-control label="Title">
+         <input name="title" id="title" #input>
+      </app-control>
+
+      <app-control  label="Request">
+        <textarea name="request" rows="3" #input></textarea>
+      </app-control>
+
+- REFACTOR TO USE contentChild() function with Signal
+
+    private control = contentChild<ElementRef<HTMLInputElement | HTMLTextAreaElement>>('input');
+
+    onClick(){
+      console.log(this.control())
+    }
+
 
 ## 133.  A Closer Look at Decorator based querires & LifeCycle Hooks
+- What lifeCycle hook should run @ViewChild, viewChild(), @ContentChild(), ContentChild() in if we want access to an element?
+ 
+   a. ngAfterViewInit, ngAfterContentInit: 
+- 
+- ngAfterViewInit: Runs ONCE after component's VIEW has been
+      initialized
+- ngAfterContentInit: Runs ONCE after components CONTENT has been
+      initialized.
+
+- afterNextRender: (render phase) Runs ONCE the NEXT TIME that ALL
+      components have been rendered to the DOM.
+- afterRender: Runs EVERYTIME ALL components have been rendered to the 
+      Dom. Will run over and over again
 
 ## 134.  The afterRender & afterNextRender LyfeCycle Functions
+- afterNextRender: (render phase) Runs ONCE the NEXT TIME that ALL
+      components have been rendered to the DOM.
+- afterRender: Runs EVERYTIME ALL components have been rendered to the 
+      Dom. Will run over and over again
+- CANNOT use in older versions of angular <= 16   
+- Where do you register these hooks?
+    a. In the constructor body
+    b. constructor(){
+      afterRender(()=> {
+        console.log('afterRender')
+      })
+     }
+     c. constructor(){
+         afterNextRender(()=> {
+            console.log('afterNextRender')
+         })
+            
+         
+     }
+-  What is a use case for using these hooks?
+    
 
 ## 135.  Making Sense of Signal Effects
+- How to run code logic IN THE COMPONENT when a signal value
+  changes?
+
+  1. In the components constructor you must run the following
+     constructor(){
+      effect(()=> {
+        console.log(this.currentStatus())
+      })
+     }
+- TIP: angular AUTOMATICALLY sets up a SUBSCRIPTION for a signal
+      property in the TEMPLATE and cleans it up also
+      
+
+- in server-status component REFACTOR the currentStatus
+  property to use a signal
+
+- currentStatus: 'online' | 'offline' | 'unknown' = 'offline';
+
+- REFACTOR: currentStatus = signal<'online' | 'offline' | 'unknown">('offline')
+
+- REFACTOR: in all place where signal value is updated use SET
+  - this.currentStatus.set('online')
+
+- REFACTOR: in template refactor: 
+  - currentStatus()=== "online"
 
 ## 136.  Signal Effects CleanUp Functions
+- When working with Signal effects, you sometimes might need to perform some cleanup work before the effect function runs again (e.g., to clear some timer or something like that).
+
+Angular's effect() allows you to do that!
+
+It does provide you with an onCleanup hook which you can execute as part of your effect function to define what should happen before the effect code runs the next time:
+
+effect((onCleanup) => {
+  const tasks = getTasks();
+  const timer = setTimeout(() => {
+    console.log(`Current number of tasks: ${tasks().length}`);
+  }, 1000);
+  onCleanup(() => {
+    clearTimeout(timer);
+  });
+});
+## 137.  TypeScript and Type Models Repetition
+- GOAL: take submited ticket values from new-ticket component
+        form to create a new ticket and eventually show these tickets
+
+- USE CASE : we can create a ticket service to save tickets and output 
+         them or we can create a property in the new-ticket component
+         that OUTPUTS ticket values to the TICKET COMPONENT
+
+- STEPS: 
+       1. in TICKET COMPONENT: create a ticket property
+          tickets: Ticket[];
+       2. Create a ticket.model.ts to describe shape of ticket 
+          export interface Ticket {
+              id: string;
+              title: string;
+              request: string;
+              status: 'open' | 'closed'
+          }
+        3. in NEW-TICKET COMPONENT:  OUTPUT form values whenever
+           a user creates a new-ticket and clicks submit
+
+           - @Output() add = new EventEmitter<title: string, text:string>()
+           - NEW WAY: add = output<title: string, text: string>()
+
+        4. in NEW-TICKET COMPONENT's onSubmit method
+            onSubmit(title: string, ticketText: string){
+              this.add.emit({title: title, text: ticketText});
+            }
+
+## 138.  Component Outputs Repetition
+- STEPS CONTINUTED FROM ABOVE
+        5. In TICKET COMPONENT TEMPLATE: bind (add) to a method in the
+           ticket component
+           <div id="new-ticket">
+             <app-new-ticket (add)="onAdd($event)">
+           </div>
+        6. in TICKET COMPONENT: create onAdd method. use data
+           to create a ticket using the TICKET interface to shape
+           data.
+
+            onAdd(ticketData: {title: string, text: string}){
+              const ticket: Ticket = {
+                title: ticketData.title,
+                text: ticketData.text,
+                id: Math.floor(Math.random()+1).toStrig(),
+                status: 'open'
+              }
+              this.tickets.push(ticket);
+            }
+        
+
+## 139.  A Closer Look @ Template For Loops: Outputting TICKET
+ component template into the TICKETS component
+
+- OUTPUT TICKET DATA in TICKETS COMPONENT
+
+- USE MODERN LOOP SYNTAX ONLY FOR ANGULAR 17 or greater!
+
+- STEPS
+
+  1.  In TICKETS COMPONENT add:
+      <div>
+        <ul>
+        @for (ticket of tickets; track ticket.id){
+         <li>
+        }@empty{
+          <p>no tickets available</p>
+        }
+           <app-ticket />
+         </li>
+        </ul>
+
+## 140.  Revisiting Inputs and Signals: styling the ticket component
+    that we are outputting in the tickets component
+- STEPS
+- 1. copy and past ticket component html file and css file from max  
+     files  
+- 2. in TICKET COMPONENT: Use @Input or input() to get new-ticket input
+     data from the TICKETS COMPONENT
+
+     @Input({required}) data: Ticket;
+           or
+     data = input.required<Ticket>();
+- 3. In TICKET COMPONENT HTML: add:
+     <button>
+        <span class="text">{{data().title}}</spam>
+             and further down in file add
+
+      @if(true){
+        <p>{{data().request}} </p>
+        @if(data.request === 'open'){
+          <p><button>Mark as completed</p> </button>
+        }
+      }
+
+ - 3. In TICKETS COMP0NENT HTML file BIND the DATA property in the
+      TICKET component to the TICKET from the loop (comes
+       from Tickets property)
+
+    <ul>
+      @for(ticket of tickets; track ticket.id){
+        <li>
+          <app-ticket [data]="ticket" />
+        </li>
+      }
+
+## 141.  Updating Signal Values: Making TICKET btn collapsable
+- GOAL: IN TICKET COMPONENT HTML make the following collapsable
+        
+     <button>
+        <span class="text">{{data().title}}</spam>
+      </button>
+- STEPS
+  1. In TICKET COMPONENT create SIGNAL boolean property 
+     detailsVisible = signal(false);
+
+  2. IN TICKET COMPONENT HTML: add a click event on the button
+     button (click)="onToggleDetails()">
+        <span class="text">{{data().title}}</spam>
+             and further down in file add
+
+  3. In TICKET COMPONENT: create onToggleDetails method
+      onToggleDetails(){
+        this.detailsVisible().set(!this.detailsVisible)
+      }
+
+  4. In TICKET COMPONENT HTML: change @if, @else statments
+
+     @if(detailsVisible === 'true') or (detailsVisible()) means same
+     <svg........>
+
+     @if(detailsVisible()){
+      <p>{{data().request}}</p>
+     }
+
+
+     
+        
+
+## 142.  Cross Component Communication & State Mangagement-
+- GOAL: in ticket component ui REMOVE MARK AS COMPLETE BUTTON &
+        Change cirular icon color next to the test button
+        when the ticket is complete
+
+- STEPS:
+1.   change STATUS of ticket in TICKETS COMPONENT where tickets
+     array is. create onCLOSE method that will close ticket
+
+     onClose(id: string){
+       // 1. create a new tickets array
+
+       // 2. interate (map) through each ticket element by running 
+             a function for EACH element seeing if the ticket.id
+             matches the id from the parameter if it does then
+             that ticket should be marked as CLOSE
+        
+       //3. map that ticket to a NEW OBJECT use spread operator
+            to extract all existing properties. OVERWRITE status
+            property by setting to 'close'
+
+      //4. return ticket;...if not ticket matching id is found
+        
+       1. this.tickets = this.tickets.map((ticket)=> {
+           2. if(ticket.id === id){
+              3. return { ...ticket, status: 'closed'}
+           }
+           4. return ticket;
+       })
+     }
+
+2. TRIGGER onCloseTicket() with a custom event in TICKET COMPONENT
+
+   1. in TICKETS COMPONENT create a custom event close property
+   close = output()
+
+3. EMIT CLOSE event whenever "mark as complete button" clicked
+
+    1. In TICKET COMPONENT create onMarkComplete method. and emit
+       close event. WILL NOT EMIT ANY DATA!
+
+       onMarkComplete(){
+          this.close.emit()
+       }
+
+4. Create CLICK EVENT in TICKET COMPONENT HTML
+     <p><button (click)="onMarkComplete()"> Mark as Completed </p></button>
+
+5. In TICKETS COMPONENT HTML on the <app-ticket> listen for
+   the CLOSE EVENT and trigger the onCloseTicket method
+   make sure to pass in the ticket.id
+
+   <ul>
+      @for(ticket of tickets; track ticket.id){
+        <li>
+          <app-ticket [data]="ticket" (close)="onCloseTicket(ticket.id)"/>
+        </li>
+      }
+
+  6. In TICKET COMPONENT HTML REFLECT the ticket completed status
+
+     UPDATE THE BELOW CODE 
+     <article>
+      <h3>
+       <div 
+        [class]="{
+          'ticket-open': true,
+          'ticket-closed': false
+        }">
+
+        TO:
+        <article>
+      <h3>
+       <div 
+        [class]="{
+          'ticket-open': data().status === 'open',
+          'ticket-closed': data().status === 'closed'
+        }">
+
+
+
+
+## 143.  Comfiguring Component OutPuts and Inputs
+- Max goes over adding an alias options object to @input,
+  input(), @output()
+## 144.  Two-Way Binding Repetition
+- Max refactors the code in the NEW_TICKET COMPONENT TEMPLATE
+  to use two-way binding instead of template variables
+
+- TIP: remember you can set up the property that the template
+       variable will save its input value to as a SIGNAL
+       or NON SIGNAL
+
+- Refactored Code:
+  1. <form (ngSubmit)="onSubmit()">...do not pass anything inside
+
+  2. IMPORT formsModule to NEW-TICKET COMPONENT
+     { FormsModule } from '@angular/forms'
+     imports: [FormsModule]
+
+  3. add properties to NEW-TICKET COMPONENT
+     enteredTitle = '';
+     entertedText = '';
+
+  4. Add enteredTitle and enteredText to the form input
+     <input name="title" id="title" [(ngModel)]="enteredTitle">
+     <input name="text" id="text" [(ngModel)]="enteredText">
+
+  5. In NEW-TICKET COMPONENT create an @Output EventEmitter
+     that will pass the input values to the tickets component
+
+     @Output() add = new EventEmitter<{ title: string, text: string}>();
+
+  6. In the onSubmit method emit the add event passing in the
+     title and text values from the inputs
+
+     onSubmit(){
+    this.add.emit({title: this.enteredTitle, text: this.enteredText})
+  }
+
+  7. Reset the form input fields when the form is submitted
+     
+     onSubmit(){
+    this.add.emit({title: this.enteredTitle, text: this.enteredText})
+    this.enteredText = '';
+    this.enteredTitle = '';
+  }
+
+## 145.  Setting Up Custom Two-Way Binding
+
+## 146.  An Easier Way of setting up Custom Two-Way Binding
+
           
